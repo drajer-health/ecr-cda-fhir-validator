@@ -1,29 +1,22 @@
 package com.drajer.ecranonymizer.service.impl;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.mail.Message;
-
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.hl7.fhir.validation.ValidationEngine;
@@ -35,7 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.drajer.ecranonymizer.config.S3StorageService;
+import com.drajer.ecranonymizer.response.FhirValidationResponse;
 import com.drajer.ecranonymizer.service.ValidationServcie;
 import com.drajer.ecranonymizer.utils.FileUtils;
 
@@ -46,8 +39,6 @@ import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.ResultSeverityEnum;
 import ca.uhn.fhir.validation.SingleValidationMessage;
 import ca.uhn.fhir.validation.ValidationResult;
-import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 @Service
 public class ValidationServcieImpl implements ValidationServcie {
@@ -60,7 +51,6 @@ public class ValidationServcieImpl implements ValidationServcie {
 
 	FhirValidator validator;
 
-	S3StorageService s3StorageService;
 
 	@Value("${ecr.anonymizer.cache.file}")
 	private String ecrAnonymizerCacheFile;
@@ -68,30 +58,32 @@ public class ValidationServcieImpl implements ValidationServcie {
 	@Autowired
 	Environment environment;
 
-	public ValidationServcieImpl(FhirContext fhirContext, ValidationEngine validationEngine,
-			S3StorageService s3StorageService) {
+	public ValidationServcieImpl(FhirContext fhirContext, ValidationEngine validationEngine) {
 		this.fhirContext = fhirContext;
 		this.validationEngine = validationEngine;
-		this.s3StorageService = s3StorageService;
+		
 
 	}
 
 	@Override
-	public String validateS3Bundle(String keyName) throws IOException {
+	public FhirValidationResponse validateFhirBundle(MultipartFile eicr) throws IOException {
 
 		IParser parser = fhirContext.newXmlParser();
 		IParser jsonParser = fhirContext.newJsonParser();
 		validator = fhirContext.newValidator();
-		
+		boolean isValidExtension = FileUtils.validateFileExtension(eicr, "xml");
+		if (!isValidExtension) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+					"Invalid file format: " + eicr.getOriginalFilename() + ". Please upload an XML file.");
+		}
 		String dataXml;
 
-	
-		try (ResponseInputStream<GetObjectResponse> s3File = s3StorageService.getS3File(keyName)) {
-		    // Use the InputStream directly from the ResponseInputStream
-		    try (InputStream inputStream = s3File) {
-		        dataXml = convertXmlToString(inputStream);
-		    }
+		try (InputStream inputStream = eicr.getInputStream()) {
+			dataXml = convertXmlToString(inputStream);
 		}
+
+	
+		
 		System.out.println("Before validation time " + new Date());
 		try {
 			Bundle bundle = parser.parseResource(Bundle.class, dataXml);
@@ -110,24 +102,13 @@ public class ValidationServcieImpl implements ValidationServcie {
 			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
 			System.out.println("After validation time " + new Date());
+			
+			FhirValidationResponse fhirValidationResponse =createValidationResponse(allMessages);
 
-			Path validatorCachePath = Paths.get(ecrAnonymizerCacheFile + "/" + "validator-output");
-
-			try {
-				Files.createDirectories(validatorCachePath);
-				System.out.println("Directory created or already exists: " + validatorCachePath.toString());
-			} catch (IOException e) {
-				System.err.println("Failed to create directory: " + e.getMessage());
-			}
-
-			Path validationStoragePath = Paths.get(validatorCachePath + "/" + "validation_errors.txt");
-
-			FileUtils.writeErrorsToFile(allMessages, validationStoragePath);
-
-			Path s3Path = Paths.get(keyName).getParent();
-			Path ValidationfilekeyName = Paths.get(s3Path + "/validation_errors.txt");
-			s3StorageService.uploadFile(ValidationfilekeyName.toString(), new File(validationStoragePath.toString()));
-
+			
+			return fhirValidationResponse;
+	
+		
 		} catch (DataFormatException e) {
 
 			String errorMessage = "Failed to parse XML: " + e.getMessage();
@@ -138,7 +119,6 @@ public class ValidationServcieImpl implements ValidationServcie {
 			String errorMessage = "An unexpected error occurred while processing the XML bundle: " + e.getMessage();
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage, e);
 		}
-		return "Validation completed";
 	}
 
 	@Override
@@ -270,6 +250,22 @@ public class ValidationServcieImpl implements ValidationServcie {
 				.append(", resourceId=").append(resource.getIdElement().getIdPart()).append(", entry=")
 				.append(entryFullUrl).append(", location=").append(message.getLocationString()).append(":- ")
 				.append(", message=").append(message.getMessage()).append("]").toString();
+	}
+	
+	
+	private FhirValidationResponse createValidationResponse(List<String> allMessages) {
+	    FhirValidationResponse response = new FhirValidationResponse();
+	    
+	    if (!allMessages.isEmpty()) {
+	        response.setSuccess(false);
+	        response.setMessage("Validation failed with errors.");
+	        response.setValidationOutput(allMessages);
+	    } else {
+	        response.setSuccess(true);
+	        response.setMessage("Validation completed successfully.");
+	    }
+	    
+	    return response;
 	}
 
 }
