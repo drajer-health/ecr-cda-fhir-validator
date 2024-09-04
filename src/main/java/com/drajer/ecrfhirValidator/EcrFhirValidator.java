@@ -1,15 +1,15 @@
-package com.drajer.ecranonymizer;
+package com.drajer.ecrfhirValidator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan("com.drajer.ecranonymizer.*")
-public class EcrAnonymizerApplication {
+@ComponentScan("com.drajer.ecrfhirValidator.*")
+public class EcrFhirValidator {
 
 	public static void main(String[] args) {
-		SpringApplication.run(EcrAnonymizerApplication.class, args);
+		SpringApplication.run(EcrFhirValidator.class, args);
 	}
 
 }

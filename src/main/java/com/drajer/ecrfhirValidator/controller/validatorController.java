@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.controller;
+package com.drajer.ecrfhirValidator.controller;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.drajer.ecranonymizer.service.ValidationServcie;
+import com.drajer.ecrfhirValidator.service.ValidationServcie;
 
 @RestController
 public class validatorController {

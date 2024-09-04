@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.controller;
+package com.drajer.ecrfhirValidator.controller;
 
 public class ValidationRequestDto {
 

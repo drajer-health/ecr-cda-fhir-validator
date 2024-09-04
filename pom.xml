@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.drajer</groupId>
-	<artifactId>ecr-anonymizer</artifactId>
+	<artifactId>ecr-fhir-validator</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ecr-anonymizer</name>
+	<name>ecr-fhir-validator</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>17</java.version>
@@ -239,8 +239,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
+			</plugin
+			>
 		</plugins>
+		
 	</build>
+	
 
 </project>

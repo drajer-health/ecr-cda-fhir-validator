@@ -1,5 +1,5 @@
 
-package com.drajer.ecranonymizer.config;
+package com.drajer.ecrfhirValidator.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

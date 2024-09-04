@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.utils;
+package com.drajer.ecrfhirValidator.utils;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;

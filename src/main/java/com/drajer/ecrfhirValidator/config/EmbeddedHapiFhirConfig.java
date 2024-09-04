@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.config;
+package com.drajer.ecrfhirValidator.config;
 
 import java.io.File;
 import java.io.InputStream;

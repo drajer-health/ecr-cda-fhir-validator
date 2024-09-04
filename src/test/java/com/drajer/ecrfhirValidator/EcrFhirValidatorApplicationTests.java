@@ -1,10 +1,10 @@
-package com.drajer.ecranonymizer;
+package com.drajer.ecrfhirValidator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class EcrAnonymizerApplicationTests {
+class EcrFhirValidatorApplicationTests {
 
 	@Test
 	void contextLoads() {

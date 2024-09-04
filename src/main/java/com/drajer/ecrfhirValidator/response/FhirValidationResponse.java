@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.response;
+package com.drajer.ecrfhirValidator.response;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.drajer.ecranonymizer.service.impl;
+package com.drajer.ecrfhirValidator.service.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,9 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.drajer.ecranonymizer.response.FhirValidationResponse;
-import com.drajer.ecranonymizer.service.ValidationServcie;
-import com.drajer.ecranonymizer.utils.FileUtils;
+import com.drajer.ecrfhirValidator.response.FhirValidationResponse;
+import com.drajer.ecrfhirValidator.service.ValidationServcie;
+import com.drajer.ecrfhirValidator.utils.FileUtils;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.DataFormatException;
@@ -51,7 +51,6 @@ public class ValidationServcieImpl implements ValidationServcie {
 
 	FhirValidator validator;
 
-
 	@Value("${ecr.anonymizer.cache.file}")
 	private String ecrAnonymizerCacheFile;
 
@@ -61,7 +60,6 @@ public class ValidationServcieImpl implements ValidationServcie {
 	public ValidationServcieImpl(FhirContext fhirContext, ValidationEngine validationEngine) {
 		this.fhirContext = fhirContext;
 		this.validationEngine = validationEngine;
-		
 
 	}
 
@@ -82,8 +80,6 @@ public class ValidationServcieImpl implements ValidationServcie {
 			dataXml = convertXmlToString(inputStream);
 		}
 
-	
-		
 		System.out.println("Before validation time " + new Date());
 		try {
 			Bundle bundle = parser.parseResource(Bundle.class, dataXml);
@@ -102,13 +98,11 @@ public class ValidationServcieImpl implements ValidationServcie {
 			CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
 			System.out.println("After validation time " + new Date());
-			
-			FhirValidationResponse fhirValidationResponse =createValidationResponse(allMessages);
 
-			
+			FhirValidationResponse fhirValidationResponse = createValidationResponse(allMessages);
+
 			return fhirValidationResponse;
-	
-		
+
 		} catch (DataFormatException e) {
 
 			String errorMessage = "Failed to parse XML: " + e.getMessage();
@@ -239,7 +233,9 @@ public class ValidationServcieImpl implements ValidationServcie {
 				.append(message.getCol()).append(", resource=").append(resource.fhirType()).append(", resourceId=")
 				.append(resource.getIdElement().getIdPart()).append(", entry=").append(entryFullUrl)
 				.append(", location=").append(message.getLocation()).append(":- ").append(", message=")
-				.append(message.getMessage()).append("]").toString();
+				.append(message.getMessage()).append("]").append(System.lineSeparator()).
+
+				toString();
 	}
 
 	private String formatValidationMessage(StringBuilder logBuilder, SingleValidationMessage message,
@@ -249,23 +245,25 @@ public class ValidationServcieImpl implements ValidationServcie {
 				.append(message.getLocationCol()).append(", resource=").append(resource.fhirType())
 				.append(", resourceId=").append(resource.getIdElement().getIdPart()).append(", entry=")
 				.append(entryFullUrl).append(", location=").append(message.getLocationString()).append(":- ")
-				.append(", message=").append(message.getMessage()).append("]").toString();
+				.append(", message=").append(message.getMessage()).append("]").append(System.lineSeparator()).
+
+				toString();
+
 	}
-	
-	
+
 	private FhirValidationResponse createValidationResponse(List<String> allMessages) {
-	    FhirValidationResponse response = new FhirValidationResponse();
-	    
-	    if (!allMessages.isEmpty()) {
-	        response.setSuccess(false);
-	        response.setMessage("Validation failed with errors.");
-	        response.setValidationOutput(allMessages);
-	    } else {
-	        response.setSuccess(true);
-	        response.setMessage("Validation completed successfully.");
-	    }
-	    
-	    return response;
+		FhirValidationResponse response = new FhirValidationResponse();
+
+		if (!allMessages.isEmpty()) {
+			response.setSuccess(false);
+			response.setMessage("Validation failed with errors.");
+			response.setValidationOutput(allMessages);
+		} else {
+			response.setSuccess(true);
+			response.setMessage("Validation completed successfully.");
+		}
+
+		return response;
 	}
 
 }

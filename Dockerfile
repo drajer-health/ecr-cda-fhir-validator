@@ -11,4 +11,4 @@ COPY src ./src
  RUN mvn clean install  -Dmaven.test.skip=true
 
 # Define the command to run your application
-CMD ["java", "-jar", "./target/ecr-anonymizer-0.0.1-SNAPSHOT.jar"]
+CMD ["java", "-jar", "./target/ecr-fhir-validator-0.0.1-SNAPSHOT.jar"]
