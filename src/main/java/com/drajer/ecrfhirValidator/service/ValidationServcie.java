@@ -9,8 +9,7 @@ import com.drajer.ecrfhirValidator.response.FhirValidationResponse;
 
 public interface ValidationServcie {
 
-	public String validateBundle(MultipartFile eicr) throws IOException;
 
 
-	FhirValidationResponse validateFhirBundle(MultipartFile eicr) throws IOException;
+	Object validateFhirBundle(MultipartFile eicr) throws IOException;
 }

@@ -19,12 +19,7 @@ public class validatorController {
 	ValidationServcie validationServcie;
 
 
-	@PostMapping("/api/validator")
-	public String localValidator(@RequestPart MultipartFile eicrData) throws IOException {
-		return validationServcie.validateBundle(eicrData);
 
-	}
-	
 	@PostMapping("/api/fhir/validator")
 	public  ResponseEntity<Object> fhirValidator(@RequestPart MultipartFile file) throws IOException {      
 		
